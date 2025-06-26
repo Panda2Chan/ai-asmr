@@ -1,0 +1,49 @@
+# pnpm 配置文件
+# 优化包管理和开发体验
+
+# 自动安装对等依赖
+auto-install-peers=true
+
+# 严格的对等依赖检查
+strict-peer-dependencies=false
+
+# 保存精确版本
+save-exact=true
+
+# 使用 pnpm 的存储
+store-dir=./.pnpm-store
+
+# 启用 pnpm 的符号链接
+symlink=true
+
+# 设置 Node.js 版本
+node-version=18.0.0
+
+# 设置 npm 注册表
+registry=https://registry.npmjs.org/
+
+# 设置镜像（可选，如果需要使用国内镜像）
+# registry=https://registry.npmmirror.com/
+
+# 启用 pnpm 的缓存
+cache-dir=./.pnpm-cache
+
+# 设置并发安装数量
+max-concurrency=4
+
+# 启用 pnpm 的审计
+audit-level=moderate
+
+# 设置 pnpm 的日志级别
+loglevel=info
+
+# 启用 pnpm 的进度条
+progress=true
+
+# 设置 pnpm 的超时时间
+network-timeout=60000
+
+# 启用 pnpm 的重试机制
+fetch-retries=3
+fetch-retry-mintimeout=10000
+fetch-retry-maxtimeout=60000 

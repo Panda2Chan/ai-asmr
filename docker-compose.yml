@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ai-amsr-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ai_amsr
+      MYSQL_USER: ai_amsr_user
+      MYSQL_PASSWORD: ai_amsr_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ai-amsr-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai-amsr-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai-amsr-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-amsr-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://ai_amsr_user:ai_amsr_password@mysql:3306/ai_amsr
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=your-nextauth-secret-key-here
+      - GOOGLE_CLIENT_ID=your-google-client-id
+      - GOOGLE_CLIENT_SECRET=your-google-client-secret
+      - VEO3_API_KEY=your-veo3-api-key
+      - VEO3_API_URL=https://api.veo3.ai
+      - STRIPE_SECRET_KEY=sk_test_your-stripe-secret-key
+      - STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-publishable-key
+      - STRIPE_WEBHOOK_SECRET=whsec_your-stripe-webhook-secret
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - ai-amsr-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  ai-amsr-network:
+    driver: bridge 
