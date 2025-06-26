@@ -1,114 +1,124 @@
-// 基础类型定义
-export interface BaseEntity {
+import { NextAuthOptions } from 'next-auth';
+import { JWT } from 'next-auth/jwt';
+
+// 扩展 NextAuth 类型
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+
+  interface User {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    userId: string;
+    email?: string | null;
+    name?: string | null;
+    image?: string | null;
+  }
+}
+
+// 用户相关类型
+export interface UserProfile {
   id: string;
+  name: string;
+  email: string;
+  image?: string;
+  emailVerified?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  subscription?: Subscription;
+  usage?: Usage;
+}
+
+// 订阅相关类型
+export interface Subscription {
+  id: string;
+  userId: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing';
+  plan: 'free' | 'basic' | 'pro' | 'enterprise';
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// 用户相关类型
-export interface User extends BaseEntity {
-  name: string | null;
-  email: string;
-  emailVerified: Date | null;
-  image: string | null;
-  subscription?: Subscription;
-  settings?: UserSettings;
+// 使用量相关类型
+export interface Usage {
+  id: string;
+  userId: string;
+  videosGenerated: number;
+  videosRemaining: number;
+  totalVideosAllowed: number;
+  resetDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface UserSettings extends BaseEntity {
+// 视频生成相关类型
+export interface VideoGeneration {
+  id: string;
   userId: string;
-  language: string;
-  theme: 'light' | 'dark';
-  notifications: boolean;
-  autoSave: boolean;
-}
-
-// 订阅相关类型
-export interface Subscription extends BaseEntity {
-  userId: string;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
-  stripePriceId: string | null;
-  stripeCurrentPeriodEnd: Date | null;
-  planType: PlanType;
-  status: SubscriptionStatus;
-}
-
-export type PlanType = 'FREE' | 'BASIC' | 'PRO' | 'ENTERPRISE';
-export type SubscriptionStatus = 'ACTIVE' | 'CANCELED' | 'PAST_DUE' | 'UNPAID' | 'TRIAL';
-
-// 视频相关类型
-export interface Video extends BaseEntity {
-  userId: string;
-  title: string;
-  description: string | null;
   prompt: string;
-  style: string;
   duration: number;
-  status: VideoStatus;
-  videoUrl: string | null;
-  thumbnailUrl: string | null;
-  metadata: VideoMetadata | null;
-}
-
-export interface VideoMetadata {
   style: string;
   audioType: string;
-  quality: string;
-  resolution: string;
-  fps: number;
-  bitrate: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  errorMessage?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export type VideoStatus = 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+// API 响应类型
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
 
 // 视频生成请求类型
 export interface VideoGenerationRequest {
   prompt: string;
   duration: number;
-  style: VideoStyle;
-  audioType: AudioType;
-  quality?: VideoQuality;
-  resolution?: VideoResolution;
+  style: string;
+  audioType: string;
 }
 
-export type VideoStyle = 
-  | 'nature' 
-  | 'rain' 
-  | 'ocean' 
-  | 'forest' 
-  | 'fire' 
-  | 'whitenoise' 
-  | 'meditation' 
-  | 'sleep' 
-  | 'relaxation' 
-  | 'custom';
-
-export type AudioType = 
-  | 'rain' 
-  | 'ocean' 
-  | 'forest' 
-  | 'fire' 
-  | 'whitenoise' 
-  | 'meditation' 
-  | 'sleep' 
-  | 'relaxation' 
-  | 'custom';
-
-export type VideoQuality = 'low' | 'medium' | 'high' | 'ultra';
-export type VideoResolution = '720p' | '1080p' | '1440p' | '4k';
-
-// VEO3 API 相关类型
-export interface Veo3ApiResponse {
+// 视频生成响应类型
+export interface VideoGenerationResponse {
   id: string;
-  status: 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  estimatedTime?: number;
   videoUrl?: string;
   thumbnailUrl?: string;
-  estimatedTime?: number;
-  error?: string;
+  errorMessage?: string;
 }
 
-export interface Veo3ApiRequest {
+// VEO3 API 相关类型
+export interface Veo3Config {
+  apiKey: string;
+  apiUrl: string;
+  timeout: number;
+}
+
+export interface Veo3VideoRequest {
   prompt: string;
   duration: number;
   style: string;
@@ -117,29 +127,31 @@ export interface Veo3ApiRequest {
   resolution?: string;
 }
 
-// 使用统计类型
-export interface UsageStats extends BaseEntity {
-  userId: string;
-  date: Date;
-  videosGenerated: number;
-  totalDuration: number;
-  apiCalls: number;
+export interface Veo3VideoResponse {
+  id: string;
+  status: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  estimatedTime?: number;
+  error?: string;
 }
 
 // 支付相关类型
-export interface Payment extends BaseEntity {
-  userId: string;
-  stripePaymentId: string;
+export interface PaymentIntent {
+  id: string;
   amount: number;
   currency: string;
-  status: PaymentStatus;
-  description: string | null;
-  metadata: any;
+  status: string;
+  clientSecret: string;
 }
 
-export type PaymentStatus = 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'CANCELED';
-
 // Stripe 相关类型
+export interface StripeConfig {
+  secretKey: string;
+  publishableKey: string;
+  webhookSecret: string;
+}
+
 export interface StripeCustomer {
   id: string;
   email: string;
@@ -151,8 +163,16 @@ export interface StripeSubscription {
   id: string;
   customerId: string;
   status: string;
+  currentPeriodStart: number;
   currentPeriodEnd: number;
+  cancelAtPeriodEnd: boolean;
+  items: StripeSubscriptionItem[];
+}
+
+export interface StripeSubscriptionItem {
+  id: string;
   priceId: string;
+  quantity: number;
 }
 
 export interface StripePrice {
@@ -161,33 +181,24 @@ export interface StripePrice {
   unitAmount: number;
   currency: string;
   recurring?: {
-    interval: 'month' | 'year';
+    interval: string;
+    intervalCount: number;
   };
 }
 
-// 套餐计划类型
-export interface Plan {
+export interface StripeProduct {
   id: string;
   name: string;
-  type: PlanType;
-  price: number;
-  currency: string;
-  features: string[];
-  limits: {
-    videosPerMonth: number;
-    maxDuration: number;
-    maxQuality: VideoQuality;
-    maxResolution: VideoResolution;
-  };
-  stripePriceId: string;
+  description?: string;
+  metadata?: Record<string, string>;
 }
 
-// API 响应类型
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
+// 分页相关类型
+export interface PaginationParams {
+  page: number;
+  limit: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface PaginatedResponse<T> {
@@ -197,102 +208,82 @@ export interface PaginatedResponse<T> {
     limit: number;
     total: number;
     totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
 }
 
-// 表单类型
-export interface LoginForm {
-  email: string;
-  password: string;
-}
-
-export interface RegisterForm {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export interface ProfileForm {
-  name: string;
-  email: string;
-  language: string;
-  theme: 'light' | 'dark';
-  notifications: boolean;
-}
-
-// 国际化类型
-export interface Locale {
-  code: string;
-  name: string;
-  flag: string;
-}
-
-// 主题类型
-export type Theme = 'light' | 'dark' | 'system';
-
-// 通知类型
-export interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  title: string;
-  message: string;
-  duration?: number;
-}
-
-// 文件上传类型
-export interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  url: string;
-  uploadedAt: Date;
-}
-
-// 错误类型
-export interface AppError {
-  code: string;
-  message: string;
-  details?: any;
-}
-
-// 会话类型
-export interface Session {
-  user: User;
-  expires: string;
-}
-
-// 仪表板统计类型
-export interface DashboardStats {
-  totalVideos: number;
-  totalDuration: number;
-  thisMonthVideos: number;
-  thisMonthDuration: number;
-  subscriptionStatus: SubscriptionStatus;
-  planType: PlanType;
-  usagePercentage: number;
-}
-
-// 搜索和过滤类型
+// 搜索和过滤相关类型
 export interface VideoFilters {
-  status?: VideoStatus;
-  style?: VideoStyle;
+  status?: string;
+  style?: string;
+  audioType?: string;
   dateRange?: {
     start: Date;
     end: Date;
   };
-  duration?: {
-    min: number;
-    max: number;
-  };
 }
 
-export interface SearchParams {
+export interface SearchParams extends PaginationParams {
   query?: string;
-  page?: number;
-  limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   filters?: VideoFilters;
-} 
+}
+
+// 环境变量类型
+export interface EnvironmentVariables {
+  DATABASE_URL: string;
+  NEXTAUTH_URL: string;
+  NEXTAUTH_SECRET: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  VEO3_API_KEY: string;
+  VEO3_API_URL: string;
+  STRIPE_SECRET_KEY: string;
+  STRIPE_PUBLISHABLE_KEY: string;
+  STRIPE_WEBHOOK_SECRET: string;
+  NEXT_PUBLIC_APP_URL: string;
+  ALLOWED_EMAIL_DOMAINS?: string;
+}
+
+// 组件 Props 类型
+export interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  loading?: boolean;
+  onClick?: () => void;
+  className?: string;
+  type?: 'button' | 'submit' | 'reset';
+}
+
+export interface HeaderProps {
+  user?: UserProfile;
+}
+
+export interface HeroProps {
+  user?: UserProfile;
+}
+
+export interface PricingProps {
+  user?: UserProfile;
+  currentPlan?: string;
+}
+
+export interface FeaturesProps {
+  user?: UserProfile;
+}
+
+export interface TestimonialsProps {
+  user?: UserProfile;
+}
+
+export interface FAQProps {
+  user?: UserProfile;
+}
+
+export interface FooterProps {
+  user?: UserProfile;
+}

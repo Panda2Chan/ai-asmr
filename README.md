@@ -162,22 +162,33 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 - **功能**: Google OAuth 登录、用户会话管理
 - **API 端点**: `/api/auth/*`
 
-### 2. 视频生成模块
+### 2. Dashboard 模块
+- **文件位置**: `src/app/dashboard/`
+- **功能**: 用户仪表板、统计信息、快速操作、最近视频
+- **主要组件**:
+  - `DashboardHeader`: 顶部导航栏，包含用户菜单和搜索
+  - `DashboardSidebar`: 侧边导航栏，包含功能菜单
+  - `DashboardStats`: 统计卡片，显示用户使用情况
+  - `QuickActions`: 快速操作面板
+  - `RecentVideos`: 最近生成的视频列表
+- **API 端点**: `/api/user/profile`, `/api/videos/recent`
+
+### 3. 视频生成模块
 - **文件位置**: `src/app/generate/`
 - **功能**: VEO3 API 集成、视频生成队列
 - **API 端点**: `/api/generate/*`
 
-### 3. 用户仪表板
+### 4. 用户仪表板
 - **文件位置**: `src/app/dashboard/`
 - **功能**: 视频管理、使用统计、订阅信息
 - **API 端点**: `/api/dashboard/*`
 
-### 4. 支付系统
+### 5. 支付系统
 - **文件位置**: `src/app/payment/`
 - **功能**: Stripe 支付集成、订阅管理
 - **API 端点**: `/api/payment/*`
 
-### 5. 国际化
+### 6. 国际化
 - **文件位置**: `src/lib/i18n/`
 - **功能**: 多语言支持、本地化配置
 

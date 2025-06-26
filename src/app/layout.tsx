@@ -1,33 +1,39 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import SessionProvider from '@/components/providers/SessionProvider';
+import { getServerSession } from 'next-auth';
+import { authConfig } from '@/lib/auth';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ASMR 视频生成器 - AI 驱动的放松视频创作平台',
-  description: '使用 VEO3 AI 技术生成高质量的 ASMR 视频，支持多种风格和自定义参数，让您轻松创建放松内容。',
-  keywords: 'ASMR, 视频生成, AI, 放松, 冥想, 睡眠, VEO3',
-  authors: [{ name: 'AI AMSR Team' }],
-  creator: 'AI AMSR Team',
-  publisher: 'AI AMSR',
+  title: 'ASMR 视频生成器 - AI 驱动的 ASMR 内容创作平台',
+  description:
+    '使用先进的 AI 技术生成高质量的 ASMR 视频内容，支持多种风格和音效，让您轻松创作独特的 ASMR 体验。',
+  keywords: 'ASMR, 视频生成, AI, 放松, 冥想, 睡眠, 音效',
+  authors: [{ name: 'ASMR Studio Team' }],
+  creator: 'ASMR Studio',
+  publisher: 'ASMR Studio',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  ),
   openGraph: {
-    title: 'ASMR 视频生成器 - AI 驱动的放松视频创作平台',
-    description: '使用 VEO3 AI 技术生成高质量的 ASMR 视频，支持多种风格和自定义参数。',
+    title: 'ASMR 视频生成器',
+    description: 'AI 驱动的 ASMR 内容创作平台',
     url: '/',
-    siteName: 'AI AMSR',
+    siteName: 'ASMR Studio',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'ASMR 视频生成器',
+        alt: 'ASMR Studio',
       },
     ],
     locale: 'zh_CN',
@@ -35,8 +41,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ASMR 视频生成器 - AI 驱动的放松视频创作平台',
-    description: '使用 VEO3 AI 技术生成高质量的 ASMR 视频，支持多种风格和自定义参数。',
+    title: 'ASMR 视频生成器',
+    description: 'AI 驱动的 ASMR 内容创作平台',
     images: ['/og-image.jpg'],
   },
   robots: {
@@ -55,16 +61,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession(authConfig);
+
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="zh-CN">
       <body className={inter.className}>
-        {children}
+        <SessionProvider session={session}>{children}</SessionProvider>
       </body>
     </html>
   );
-} 
+}
