@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 账户关联
+  accounts Account[]
+  sessions Session[]
+
+  // 用户订阅
+  subscription Subscription?
+
+  // 用户生成的视频
+  videos VideoGeneration[]
+
+  // 用户使用统计
+  usageStats UsageStats[]
+
+  // 用户设置
+  settings UserSettings?
+
+  @@map("users")
+}
+
+// NextAuth 账户模型
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// NextAuth 会话模型
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// NextAuth 验证令牌模型
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// 订阅模型
+model Subscription {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  stripeCustomerId   String?   @unique
+  stripeSubscriptionId String? @unique
+  stripePriceId      String?
+  stripeCurrentPeriodEnd DateTime?
+  planType           PlanType  @default(FREE)
+  status             SubscriptionStatus @default(ACTIVE)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+// 视频模型
+model VideoGeneration {
+  id           String   @id @default(cuid())
+  userId       String
+  prompt       String   @db.Text
+  duration     Int      @default(60) // 视频时长（秒）
+  style        String   @default("nature") // 视频风格
+  audioType    String   @default("rain") // 音频类型
+  status       String   @default("pending") // pending, processing, completed, failed
+  videoUrl     String?  @db.Text
+  thumbnailUrl String?  @db.Text
+  errorMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// 使用统计模型
+model UsageStats {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now())
+  videosGenerated Int @default(0)
+  totalDuration Int @default(0) // 总生成时长（秒）
+  apiCalls  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("usage_stats")
+}
+
+// 用户设置模型
+model UserSettings {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  language          String   @default("zh-CN")
+  theme             String   @default("light")
+  notifications     Boolean  @default(true)
+  autoSave          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+// 支付记录模型
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  stripePaymentId   String        @unique
+  amount            Int           // 金额（分）
+  currency          String        @default("usd")
+  status            PaymentStatus @default(PENDING)
+  description       String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+// 枚举类型定义
+enum PlanType {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+  TRIAL
+}
+
+enum VideoStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
+} 
